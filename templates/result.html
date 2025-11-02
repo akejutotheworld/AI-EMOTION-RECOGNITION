@@ -1,24 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Result — Face Emotion Detector</title>
-    <style>
-      body{font-family: Arial, sans-serif; background:#f7f9fc; color:#111; padding:24px}
-      .container{max-width:700px;margin:30px auto;padding:20px;background:white;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
-      h1{margin-top:0}
-      img{max-width:200px;border-radius:6px}
-      .emotion{font-weight:700;font-size:1.2em;margin-top:10px}
-      a{display:inline-block;margin-top:12px}
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Hi {{ fullname or 'Friend' }}</h1>
-      <p class="emotion">Predicted emotion: <strong>{{ emotion }}</strong></p>
-      <p>Thanks for trying out the tool. Your photo is stored as <code>{{ filename }}</code>.</p>
-      <a href="/">Try another</a>
-    </div>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <title>Emotion Result</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f4f8;
+      text-align: center;
+      padding: 30px;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    img {
+      width: 200px;
+      height: auto;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+    }
+    a:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Hello, {{ fullname }}!</h2>
+    <p>The detected emotion is:</p>
+    <h1>{{ emotion }}</h1>
+    <img src="{{ url_for('static', filename='../uploads/' + filename) }}" alt="Uploaded Photo">
+    <br>
+    <a href="{{ url_for('index') }}">Try Another Photo</a>
+  </div>
+</body>
 </html>
