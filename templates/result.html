@@ -3,48 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <title>Emotion Result</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f4f8;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #43cea2, #185a9d);
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .result-box {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 480px;
+      padding: 2.5rem;
       text-align: center;
-      padding: 30px;
+      animation: fadeIn 0.6s ease-in-out;
     }
-    .container {
-      background: white;
-      padding: 40px;
-      border-radius: 10px;
-      display: inline-block;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
+
+    h1 {
+      color: #185a9d;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
     img {
-      width: 200px;
-      height: auto;
-      border-radius: 10px;
-      margin-top: 20px;
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-top: 1rem;
     }
+
+    .emotion {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #2f80ed;
+      margin: 1rem 0;
+    }
+
     a {
       display: inline-block;
-      margin-top: 20px;
-      text-decoration: none;
-      background: #007bff;
+      margin-top: 1.5rem;
+      padding: 0.8rem 1.2rem;
+      background: #185a9d;
       color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: background 0.3s ease;
     }
+
     a:hover {
-      background: #0056b3;
+      background: #43cea2;
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Hello, {{ fullname }}!</h2>
-    <p>The detected emotion is:</p>
-    <h1>{{ emotion }}</h1>
-    <img src="{{ url_for('static', filename='../uploads/' + filename) }}" alt="Uploaded Photo">
+  <div class="result-box">
+    <h1>Emotion Detected </h1>
+    <p>Hello, <strong>{{ fullname }}</strong>!</p>
+    <p class="emotion">Your predicted emotion: <span>{{ emotion }}</span></p>
+    <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Uploaded Face">
+
     <br>
-    <a href="{{ url_for('index') }}">Try Another Photo</a>
+    <a href="{{ url_for('index') }}">Try Another Image</a>
+
+    <footer>✨ Powered by AI Emotion Detector</footer>
   </div>
 </body>
 </html>
