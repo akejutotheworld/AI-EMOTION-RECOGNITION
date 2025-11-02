@@ -1,2 +1,2 @@
 # After you deploy on Render, paste the live URL here.
-https://your-app-on-render.example
+https://ai-emotion-recognition.onrender.com
