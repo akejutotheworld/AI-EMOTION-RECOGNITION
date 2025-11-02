@@ -1,39 +1,59 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Face Emotion Detector</title>
-    <style>
-      body{font-family: Arial, sans-serif; background:#f7f9fc; color:#111; padding:24px}
-      .container{max-width:700px;margin:30px auto;padding:20px;background:white;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
-      h1{margin-top:0}
-      label{display:block;margin:10px 0 6px}
-      input[type=text], input[type=email], input[type=file]{width:100%;padding:10px;border:1px solid #ddd;border-radius:4px}
-      button{margin-top:12px;padding:10px 16px;border:none;border-radius:6px;background:#0b5ed7;color:white;cursor:pointer}
-      .note{font-size:0.9em;color:#555}
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Face Emotion Detector</h1>
-      <p class="note">Fill your details and upload a clear face photo (PNG/JPG/JPEG). The app will predict your emotion.</p>
-      <form method="post" action="/submit" enctype="multipart/form-data">
-        <label for="fullname">Full name</label>
-        <input id="fullname" name="fullname" type="text" required />
+<head>
+  <meta charset="UTF-8">
+  <title>AI Emotion Recognition</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      text-align: center;
+      padding: 30px;
+    }
+    form {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      width: 250px;
+    }
+    button {
+      background-color: #007bff;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h2>AI Emotion Recognition</h2>
+  <p>Upload your photo to detect emotion</p>
 
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" required />
+  <form action="{{ url_for('submit') }}" method="post" enctype="multipart/form-data">
+    <input type="text" name="fullname" placeholder="Full Name" required><br>
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="text" name="matric" placeholder="Matric Number" required><br>
+    <input type="file" name="photo" accept="image/*" required><br>
+    <button type="submit">Analyze Emotion</button>
+  </form>
 
-        <label for="matric">Matric / Student ID</label>
-        <input id="matric" name="matric" type="text" required />
-
-        <label for="photo">Upload photo</label>
-        <input id="photo" name="photo" type="file" accept="image/*" required />
-
-        <button type="submit">Submit</button>
-      </form>
-      <p style="margin-top:12px; font-size:0.9em">Made with ❤️ — follow local best practices when storing student data.</p>
-    </div>
-  </body>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+        {% for message in messages %}
+          <li style="color:red;">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+</body>
 </html>
