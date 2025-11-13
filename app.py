@@ -84,6 +84,8 @@ def submit():
 
     if file and allowed_file(file.filename):
         filename = secure_filename(f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_" + file.filename)
+        UPLOAD_FOLDER = os.path.join('static', 'uploads')
+        app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file_bytes = file.read()
