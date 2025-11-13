@@ -12,19 +12,17 @@ import io
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 DATABASE = 'database.db'
-MODEL_PATH = 'face_emotionModel.h5'  # place the trained model here
+MODEL_PATH = 'face_emotionModel.h5'  # make sure this is in your project root
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = os.environ.get('FLASK_SECRET', 'dev_secret_change_me')
 
-# Load the trained model (lazy load when first request)
+# Load the trained model (lazy load)
 model = None
 EMOTIONS = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
 
-# Ensure upload folder exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
+# -------------------- Helpers --------------------
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -34,24 +32,25 @@ def get_db_connection():
     return conn
 
 def init_db():
+    """Creates database and table if they don't exist"""
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        fullname TEXT,
-        email TEXT,
-        matric TEXT,
-        filename TEXT,
-        predicted_emotion TEXT,
-        timestamp TEXT
-    )
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fullname TEXT,
+            email TEXT,
+            matric TEXT,
+            filename TEXT,
+            predicted_emotion TEXT,
+            timestamp TEXT
+        )
     ''')
     conn.commit()
     conn.close()
 
 def preprocess_image(image_bytes, target_size=(48,48)):
-    # Convert bytes to grayscale 48x48 as used in FER2013 model
+    """Prepares image for FER2013 model: grayscale 48x48"""
     image = Image.open(io.BytesIO(image_bytes)).convert('L')
     image = image.resize(target_size)
     arr = np.asarray(image, dtype=np.float32)
@@ -59,6 +58,7 @@ def preprocess_image(image_bytes, target_size=(48,48)):
     arr = arr.reshape(1, target_size[0], target_size[1], 1)
     return arr
 
+# -------------------- Routes --------------------
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -70,20 +70,17 @@ def submit():
     email = request.form.get('email', '').strip()
     matric = request.form.get('matric', '').strip()
 
-    if not fullname or not email or not matric:
-        flash('Please fill in all your details.')
-        return redirect(url_for('index'))
-
     if 'photo' not in request.files:
-        flash('No file part.')
+        flash('No file part')
         return redirect(url_for('index'))
 
     file = request.files['photo']
     if file.filename == '':
-        flash('No selected file.')
+        flash('No selected file')
         return redirect(url_for('index'))
 
     if file and allowed_file(file.filename):
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         filename = secure_filename(f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}")
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file_bytes = file.read()
@@ -106,18 +103,20 @@ def submit():
         # Save to database
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('INSERT INTO users (fullname, email, matric, filename, predicted_emotion, timestamp) VALUES (?,?,?,?,?,?)',
-                    (fullname, email, matric, filename, emotion, datetime.utcnow().isoformat()))
+        cur.execute('''
+            INSERT INTO users (fullname, email, matric, filename, predicted_emotion, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (fullname, email, matric, filename, emotion, datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
 
-        # Return result page
         return render_template('result.html', emotion=emotion, fullname=fullname, filename=filename)
 
     else:
         flash('File type not allowed. Please upload PNG/JPG/JPEG.')
         return redirect(url_for('index'))
 
+# -------------------- App Entry --------------------
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)
