@@ -9,29 +9,28 @@ from PIL import Image
 import io
 
 # --- Configuration ---
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.path.join('static', 'uploads')  # global correct path
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 DATABASE = 'database.db'
-MODEL_PATH = 'face_emotionModel.h5'  # place the trained model here
+MODEL_PATH = 'face_emotionModel.h5'
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 app.secret_key = os.environ.get('FLASK_SECRET', 'dev_secret_change_me')
 
-# Load the trained model (lazy load when first request)
+# Lazy load model
 model = None
 EMOTIONS = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
 
-
+# --- Helper functions ---
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
-
 
 def init_db():
     conn = get_db_connection()
@@ -50,76 +49,53 @@ def init_db():
     conn.commit()
     conn.close()
 
-
 def preprocess_image(image_bytes, target_size=(48,48)):
-    # Convert bytes to grayscale 48x48 as used in FER2013 model
     image = Image.open(io.BytesIO(image_bytes)).convert('L')
     image = image.resize(target_size)
-    arr = np.asarray(image, dtype=np.float32)
-    arr = arr / 255.0
+    arr = np.asarray(image, dtype=np.float32) / 255.0
     arr = arr.reshape(1, target_size[0], target_size[1], 1)
     return arr
 
-
+# --- Routes ---
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
-
 @app.route('/submit', methods=['POST'])
 def submit():
     global model
-    fullname = request.form.get('fullname', '').strip()
-    email = request.form.get('email', '').strip()
-    matric = request.form.get('matric', '').strip()
+    try:
+        fullname = request.form.get('fullname', '').strip()
+        email = request.form.get('email', '').strip()
+        matric = request.form.get('matric', '').strip()
 
-    if 'photo' not in request.files:
-        flash('No file part')
-        return redirect(url_for('index'))
+        if 'photo' not in request.files:
+            flash('No file part')
+            return redirect(url_for('index'))
 
-    file = request.files['photo']
-    if file.filename == '':
-        flash('No selected file')
-        return redirect(url_for('index'))
+        file = request.files['photo']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(url_for('index'))
 
-    if file and allowed_file(file.filename):
-        filename = secure_filename(f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_" + file.filename)
-        UPLOAD_FOLDER = os.path.join('static', 'uploads')
-        app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        if not allowed_file(file.filename):
+            flash('File type not allowed. Please upload PNG/JPG/JPEG.')
+            return redirect(url_for('index'))
+
+        # Save uploaded image
+        filename = secure_filename(f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}")
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file_bytes = file.read()
         with open(path, 'wb') as f:
             f.write(file_bytes)
 
-        # Load model if not already loaded
+        # Load model if not loaded
         if model is None:
             if not os.path.exists(MODEL_PATH):
-                flash('Model file not found on server. Please upload face_emotionModel.h5 to the project root.')
+                flash('Model file not found on server. Please upload face_emotionModel.h5.')
                 return redirect(url_for('index'))
             model = load_model(MODEL_PATH)
 
-        # Preprocess and predict
-        x = preprocess_image(file_bytes)
-        preds = model.predict(x)
-        emotion_idx = int(np.argmax(preds, axis=1)[0])
-        emotion = EMOTIONS[emotion_idx]
+        # Predict emotion
+        x = preproces
 
-        # Save to database
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('INSERT INTO users (fullname, email, matric, filename, predicted_emotion, timestamp) VALUES (?,?,?,?,?,?)',
-                    (fullname, email, matric, filename, emotion, datetime.utcnow().isoformat()))
-        conn.commit()
-        conn.close()
-
-        return render_template('result.html', emotion=emotion, fullname=fullname, filename=filename)
-
-    else:
-        flash('File type not allowed. Please upload PNG/JPG/JPEG.')
-        return redirect(url_for('index'))
-
-
-if __name__ == '__main__':
-    init_db()
-    app.run(host='0.0.0.0', port=5000, debug=True)
