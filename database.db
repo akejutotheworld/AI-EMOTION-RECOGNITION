@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fullname TEXT,
+    email TEXT,
+    matric TEXT,
+    filename TEXT,
+    predicted_emotion TEXT,
+    timestamp TEXT
+);
